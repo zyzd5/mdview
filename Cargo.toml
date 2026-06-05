@@ -1,0 +1,10 @@
+[package]
+name = "mdview"
+version = "0.1.0"
+edition = "2021"
+description = "A minimal, high-performance CLI tool that renders Markdown files with Claude-style typography"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+open = "5"
+rand = "0.8"
