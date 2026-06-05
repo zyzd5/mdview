@@ -1,6 +1,7 @@
+* PURE VIBE CODING BY MIMO V2.5 PRO
 # mdview
 
-A minimal, high-performance CLI tool that renders Markdown files with Claude-style typography in your browser.
+A minimal, high-performance CLI tool that renders Markdown files with in your browser.
 
 ## Features
 
