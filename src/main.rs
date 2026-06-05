@@ -39,8 +39,39 @@ fn generate_html_template(markdown_content: &str) -> String {
     // No need for full HTML escaping since content is in type="text/plain"
     let safe_content = markdown_content.replace("</script>", "<\\/script>");
 
-    format!(
-        r##"<!DOCTYPE html>
+    // Embed all resources at compile time for offline support
+    let prism_css = include_str!("../vendor/prism-tomorrow.min.css");
+    let katex_css = include_str!("../vendor/katex.min.css");
+    let marked_js = include_str!("../vendor/marked.umd.min.js");
+    let katex_js = include_str!("../vendor/katex.min.js");
+    let marked_katex_js = include_str!("../vendor/marked-katex-extension.min.js");
+    let prism_js = include_str!("../vendor/prism.min.js");
+    let prism_c = include_str!("../vendor/prism-c.min.js");
+    let prism_cpp = include_str!("../vendor/prism-cpp.min.js");
+    let prism_python = include_str!("../vendor/prism-python.min.js");
+    let prism_rust = include_str!("../vendor/prism-rust.min.js");
+    let prism_javascript = include_str!("../vendor/prism-javascript.min.js");
+    let prism_typescript = include_str!("../vendor/prism-typescript.min.js");
+    let prism_bash = include_str!("../vendor/prism-bash.min.js");
+    let prism_json = include_str!("../vendor/prism-json.min.js");
+    let prism_markdown = include_str!("../vendor/prism-markdown.min.js");
+    let prism_yaml = include_str!("../vendor/prism-yaml.min.js");
+    let prism_sql = include_str!("../vendor/prism-sql.min.js");
+    let prism_java = include_str!("../vendor/prism-java.min.js");
+    let prism_go = include_str!("../vendor/prism-go.min.js");
+
+    let mut html = String::with_capacity(
+        safe_content.len()
+            + prism_css.len()
+            + katex_css.len()
+            + marked_js.len()
+            + katex_js.len()
+            + marked_katex_js.len()
+            + prism_js.len()
+            + 20000,
+    );
+
+    html.push_str(r##"<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -48,22 +79,17 @@ fn generate_html_template(markdown_content: &str) -> String {
     <title>mdview - Markdown Viewer</title>
 
     <!-- Prism.js Theme: Tomorrow Night -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-
-    <!-- KaTeX CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-
-    <!-- Google Fonts: Noto Sans SC + Noto Sans Math + JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Sans+Math&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
-    <style>
+    <style>"##);
+    html.push_str(prism_css);
+    html.push_str("</style>\n\n    <!-- KaTeX CSS -->\n    <style>");
+    html.push_str(katex_css);
+    html.push_str("</style>\n\n    <style>");
+    html.push_str(r##"
         /* ==========================================
            Claude-Style Typography & Layout
            ========================================== */
 
-        :root {{
+        :root {
             /* Gruvbox Light Theme */
             --bg-primary: #fbf1c7;
             --bg-secondary: #ebdbb2;
@@ -80,158 +106,158 @@ fn generate_html_template(markdown_content: &str) -> String {
             --font-mono: "JetBrains Mono", "Fira Code", Consolas, "Courier New", monospace;
             --max-width: 800px;
             --line-height: 1.65;
-        }}
+        }
 
-        * {{
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }}
+        }
 
-        html {{
+        html {
             font-size: 16px;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-        }}
+        }
 
-        body {{
+        body {
             font-family: var(--font-sans);
             line-height: var(--line-height);
             color: var(--text-primary);
             background-color: var(--bg-primary);
             padding: 3rem 2rem;
-        }}
+        }
 
-        .container {{
+        .container {
             max-width: var(--max-width);
             margin: 0 auto;
-        }}
+        }
 
         /* ==========================================
            Typography Elements
            ========================================== */
 
-        h1, h2, h3, h4, h5, h6 {{
+        h1, h2, h3, h4, h5, h6 {
             font-weight: 600;
             line-height: 1.3;
             margin-top: 2em;
             margin-bottom: 0.75em;
             color: var(--text-primary);
-        }}
+        }
 
-        h1 {{
+        h1 {
             font-size: 2rem;
             font-weight: 700;
             margin-top: 0;
             padding-bottom: 0.5em;
             border-bottom: 1px solid var(--border-color);
-        }}
+        }
 
-        h2 {{
+        h2 {
             font-size: 1.5rem;
             padding-bottom: 0.3em;
             border-bottom: 1px solid var(--border-color);
-        }}
+        }
 
-        h3 {{
+        h3 {
             font-size: 1.25rem;
-        }}
+        }
 
-        h4 {{
+        h4 {
             font-size: 1.1rem;
-        }}
+        }
 
-        h5, h6 {{
+        h5, h6 {
             font-size: 1rem;
             color: var(--text-secondary);
-        }}
+        }
 
-        p {{
+        p {
             margin-bottom: 1.5em;
-        }}
+        }
 
-        a {{
+        a {
             color: var(--link-color);
             text-decoration: none;
             border-bottom: 1px solid transparent;
             transition: border-bottom-color 0.2s ease;
-        }}
+        }
 
-        a:hover {{
+        a:hover {
             color: var(--link-hover-color);
             border-bottom-color: var(--link-hover-color);
-        }}
+        }
 
-        strong {{
+        strong {
             font-weight: 600;
-        }}
+        }
 
-        em {{
+        em {
             font-style: italic;
-        }}
+        }
 
         /* ==========================================
            Lists
            ========================================== */
 
-        ul, ol {{
+        ul, ol {
             margin-bottom: 1.5em;
             padding-left: 1.5em;
-        }}
+        }
 
-        li {{
+        li {
             margin-bottom: 0.5em;
-        }}
+        }
 
         li > ul,
-        li > ol {{
+        li > ol {
             margin-top: 0.5em;
             margin-bottom: 0;
-        }}
+        }
 
         /* ==========================================
            Blockquotes
            ========================================== */
 
-        blockquote {{
+        blockquote {
             margin: 1.5em 0;
             padding: 0.75em 1.25em;
             border-left: 4px solid var(--accent-color);
             background-color: var(--bg-secondary);
             border-radius: 0 8px 8px 0;
             color: var(--text-secondary);
-        }}
+        }
 
-        blockquote p:last-child {{
+        blockquote p:last-child {
             margin-bottom: 0;
-        }}
+        }
 
-        blockquote code {{
+        blockquote code {
             background-color: rgba(0, 0, 0, 0.1);
-        }}
+        }
 
         /* ==========================================
            Code Blocks & Inline Code
            ========================================== */
 
-        code {{
+        code {
             font-family: var(--font-mono);
             font-size: 0.875em;
             background-color: rgba(0, 0, 0, 0.08);
             padding: 0.2em 0.4em;
             border-radius: 4px;
             color: var(--text-primary);
-        }}
+        }
 
-        pre {{
+        pre {
             margin: 1.5em 0;
             border-radius: 8px;
             overflow: hidden;
             background-color: var(--bg-code);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-        }}
+        }
 
-        pre code {{
+        pre code {
             display: block;
             padding: 1.25em 1.5em;
             overflow-x: auto;
@@ -240,165 +266,165 @@ fn generate_html_template(markdown_content: &str) -> String {
             background-color: transparent;
             color: #ebdbb2;
             border-radius: 0;
-        }}
+        }
 
         /* Remove Prism's default margin */
-        pre[class*="language-"] {{
+        pre[class*="language-"] {
             margin: 1.5em 0;
-        }}
+        }
 
-        code[class*="language-"] {{
+        code[class*="language-"] {
             background-color: transparent;
             padding: 0;
-        }}
+        }
 
         /* ==========================================
            Tables
            ========================================== */
 
-        table {{
+        table {
             width: 100%;
             margin: 1.5em 0;
             border-collapse: collapse;
             font-size: 0.95rem;
-        }}
+        }
 
-        thead {{
+        thead {
             background-color: var(--bg-secondary);
-        }}
+        }
 
-        th, td {{
+        th, td {
             padding: 0.75em 1em;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
-        }}
+        }
 
-        th {{
+        th {
             font-weight: 600;
             color: var(--text-primary);
-        }}
+        }
 
-        tbody tr:hover {{
+        tbody tr:hover {
             background-color: rgba(0, 0, 0, 0.05);
-        }}
+        }
 
         /* ==========================================
            Horizontal Rule
            ========================================== */
 
-        hr {{
+        hr {
             margin: 2em 0;
             border: none;
             border-top: 1px solid var(--border-color);
-        }}
+        }
 
         /* ==========================================
            Images
            ========================================== */
 
-        img {{
+        img {
             max-width: 100%;
             height: auto;
             border-radius: 8px;
             margin: 1em 0;
-        }}
+        }
 
         /* ==========================================
            KaTeX Math Formula Styles
            ========================================== */
 
-        .katex-display {{
+        .katex-display {
             margin: 1.5em 0;
             overflow-x: auto;
             overflow-y: hidden;
             padding: 0.5em 0;
             font-family: var(--font-math);
-        }}
+        }
 
-        .katex {{
+        .katex {
             font-size: 1.1em;
             font-family: var(--font-math);
-        }}
+        }
 
         .katex .mathnormal,
-        .katex .mathit {{
+        .katex .mathit {
             font-family: var(--font-math);
             font-style: normal;
-        }}
+        }
 
-        .katex .mathnormal {{
+        .katex .mathnormal {
             font-style: normal;
-        }}
+        }
 
-        .katex {{
+        .katex {
             font-style: normal;
-        }}
+        }
 
         /* Inline math alignment */
-        .katex-inline {{
+        .katex-inline {
             vertical-align: baseline;
-        }}
+        }
 
         /* Block math */
-        .katex-block {{
+        .katex-block {
             display: flex;
             justify-content: center;
             margin: 1.5em 0;
             padding: 1em;
             background-color: var(--bg-secondary);
             border-radius: 8px;
-        }}
+        }
 
         /* ==========================================
            Task Lists (GitHub-style)
            ========================================== */
 
-        .task-list-item {{
+        .task-list-item {
             list-style: none;
             margin-left: -1.5em;
-        }}
+        }
 
-        .task-list-item input {{
+        .task-list-item input {
             margin-right: 0.5em;
-        }}
+        }
 
         /* ==========================================
            Print Styles
            ========================================== */
 
-        @media print {{
-            body {{
+        @media print {
+            body {
                 background-color: white;
                 padding: 0;
-            }}
+            }
 
-            pre {{
+            pre {
                 box-shadow: none;
                 border: 1px solid var(--border-color);
-            }}
-        }}
+            }
+        }
 
         /* ==========================================
            Responsive Adjustments
            ========================================== */
 
-        @media (max-width: 640px) {{
-            body {{
+        @media (max-width: 640px) {
+            body {
                 padding: 1.5rem 1rem;
-            }}
+            }
 
-            h1 {{
+            h1 {
                 font-size: 1.75rem;
-            }}
+            }
 
-            h2 {{
+            h2 {
                 font-size: 1.35rem;
-            }}
+            }
 
-            pre code {{
+            pre code {
                 font-size: 0.8rem;
-            }}
-        }}
+            }
+        }
     </style>
 </head>
 <body>
@@ -407,34 +433,46 @@ fn generate_html_template(markdown_content: &str) -> String {
     </div>
 
     <!-- Markdown Content (safely stored in script tag) -->
-    <script id="markdown-source" type="text/plain">{safe_content}</script>
+    <script id="markdown-source" type="text/plain">"##);
+    html.push_str(&safe_content);
+    html.push_str(r##"</script>
 
     <!-- Marked.js -->
-    <script src="https://cdn.jsdelivr.net/npm/marked@16.3.0/lib/marked.umd.min.js"></script>
-
-    <!-- KaTeX -->
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-
-    <!-- Marked KaTeX Extension -->
-    <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension@5.1.10/lib/index.umd.min.js"></script>
-
-    <!-- Prism.js Core -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-
-    <!-- Prism.js Language Components -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-rust.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markdown.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script>"##);
+    html.push_str(marked_js);
+    html.push_str("</script>\n\n    <!-- KaTeX -->\n    <script>");
+    html.push_str(katex_js);
+    html.push_str("</script>\n\n    <!-- Marked KaTeX Extension -->\n    <script>");
+    html.push_str(marked_katex_js);
+    html.push_str("</script>\n\n    <!-- Prism.js Core -->\n    <script>");
+    html.push_str(prism_js);
+    html.push_str("</script>\n\n    <!-- Prism.js Language Components -->\n    <script>");
+    html.push_str(prism_c);
+    html.push_str("</script>\n    <script>");
+    html.push_str(prism_cpp);
+    html.push_str("</script>\n    <script>");
+    html.push_str(prism_python);
+    html.push_str("</script>\n    <script>");
+    html.push_str(prism_rust);
+    html.push_str("</script>\n    <script>");
+    html.push_str(prism_javascript);
+    html.push_str("</script>\n    <script>");
+    html.push_str(prism_typescript);
+    html.push_str("</script>\n    <script>");
+    html.push_str(prism_bash);
+    html.push_str("</script>\n    <script>");
+    html.push_str(prism_json);
+    html.push_str("</script>\n    <script>");
+    html.push_str(prism_markdown);
+    html.push_str("</script>\n    <script>");
+    html.push_str(prism_yaml);
+    html.push_str("</script>\n    <script>");
+    html.push_str(prism_sql);
+    html.push_str("</script>\n    <script>");
+    html.push_str(prism_java);
+    html.push_str("</script>\n    <script>");
+    html.push_str(prism_go);
+    html.push_str(r##"</script>
 
     <script>
         // Get markdown content from script tag
@@ -442,11 +480,11 @@ fn generate_html_template(markdown_content: &str) -> String {
         const markdownText = markdownSource.textContent || markdownSource.innerText;
 
         // Configure marked with KaTeX extension
-        marked.use(markedKatex({{
+        marked.use(markedKatex({
             throwOnError: false,
             output: 'html',
             nonStandard: true
-        }}));
+        }));
 
         // Parse and render markdown
         const contentElement = document.getElementById('content');
@@ -456,8 +494,9 @@ fn generate_html_template(markdown_content: &str) -> String {
         Prism.highlightAllUnder(contentElement);
     </script>
 </body>
-</html>"##
-    )
+</html>"##);
+
+    html
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
