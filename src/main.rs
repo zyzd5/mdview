@@ -1,5 +1,6 @@
 mod check;
 mod config;
+mod theme;
 
 use clap::Parser;
 use rand::Rng;
@@ -43,6 +44,10 @@ struct Cli {
     /// Append font debug info to the rendered output
     #[arg(long)]
     debug: bool,
+
+    /// Color scheme (default: gruvbox-light)
+    #[arg(long)]
+    colorscheme: Option<String>,
 }
 
 fn generate_katex_font_faces() -> String {
@@ -219,6 +224,7 @@ fn generate_html_template(
     font_math: &[String],
     katex_font_css: &str,
     debug: bool,
+    theme: &theme::Theme,
 ) -> String {
     let debug_content = if debug {
         let mut extra = String::new();
@@ -284,16 +290,9 @@ fn generate_html_template(
     html.push_str("</style>\n\n    <style>");
     html.push_str(r##"
         :root {
-            --bg-primary: #fbf1c7;
-            --bg-secondary: #ebdbb2;
-            --bg-code: #282828;
-            --text-primary: #3c3836;
-            --text-secondary: #504945;
-            --text-muted: #7c6f64;
-            --border-color: #d5c4a1;
-            --accent-color: #d65d0e;
-            --link-color: #458588;
-            --link-hover-color: #076678;
+            "##);
+    html.push_str(&theme.css_vars());
+    html.push_str(r##"
             --font-sans: "##);
     html.push_str(&sans_family);
     html.push_str(r##";
@@ -721,6 +720,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let font_mono = config.font_mono();
     let font_math = config.font_math();
 
+    let theme_name = cli
+        .colorscheme
+        .as_deref()
+        .or(config.colorscheme.as_deref())
+        .unwrap_or("gruvbox-light");
+
+    let theme = theme::Theme::by_name(theme_name).unwrap_or_else(|| {
+        let available = theme::Theme::available_names();
+        eprintln!(
+            "Error: unknown colorscheme '{}'.\nAvailable schemes: {}",
+            theme_name,
+            available.join(", ")
+        );
+        std::process::exit(1);
+    });
+
     let html_content = generate_html_template(
         &markdown_content,
         &font_sans,
@@ -728,6 +743,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &font_math,
         &katex_font_css,
         cli.debug,
+        theme,
     );
 
     let mut rng = rand::thread_rng();

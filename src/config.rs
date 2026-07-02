@@ -25,6 +25,7 @@ pub struct FontConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
+    pub colorscheme: Option<String>,
     pub fonts: Option<FontConfig>,
 }
 
@@ -64,7 +65,10 @@ impl Config {
                 }
             }
         }
-        Config { fonts: None }
+        Config {
+            colorscheme: None,
+            fonts: None,
+        }
     }
 
     pub fn font_sans(&self) -> Vec<String> {

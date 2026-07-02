@@ -4,7 +4,7 @@ A minimal, high-performance CLI tool that renders Markdown files in your browser
 
 ## Features
 
-- Gruvbox color scheme
+- Multiple color schemes: gruvbox-light, gruvbox-dark, nord, catppuccin-latte, catppuccin-mocha
 - Smart font fallback:
   - **Noto Sans SC** for Chinese text (falls back to system UI fonts)
   - **JetBrains Mono / Fira Code** for code (falls back to system monospace fonts)
@@ -24,16 +24,22 @@ cargo install --path .
 ## Usage
 
 ```bash
-mdview <file.md>              # render and open in browser
-mdview --checkhealth          # check if preferred fonts are installed
-mdview --debug <file.md>      # render with font debug info at page bottom
+mdview <file.md>                            # render and open in browser
+mdview --checkhealth                        # check if preferred fonts are installed
+mdview --debug <file.md>                    # render with font debug info at page bottom
+mdview --colorscheme nord <file.md>         # use a specific color scheme
+mdview --colorscheme bogus <file.md>        # error: lists available schemes
 ```
 
 ## Configuration
 
-Font preferences can be set in `~/.config/mdview.toml`:
+## Configuration
+
+Font preferences and color scheme can be set in `~/.config/mdview.toml`:
 
 ```toml
+colorscheme = "catppuccin-mocha"       # default: gruvbox-light
+
 [fonts]
 sans = "Source Han Sans SC"            # prefer a different Chinese font
 mono = ["Iosevka", "JetBrains Mono"]   # list multiple preferences
