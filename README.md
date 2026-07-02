@@ -1,15 +1,19 @@
-* PURE VIBE CODING BY MIMO V2.5 PRO
 # mdview
 
-A minimal, high-performance CLI tool that renders Markdown files with in your browser.
+A minimal, high-performance CLI tool that renders Markdown files in your browser with Claude-style typography.
 
 ## Features
 
 - Gruvbox color scheme
-- Noto Sans SC for Chinese text
-- KaTeX for LaTeX math formulas
+- Smart font fallback:
+  - **Noto Sans SC** for Chinese text (falls back to system UI fonts)
+  - **JetBrains Mono / Fira Code** for code (falls back to system monospace fonts)
+  - Configurable via `~/.config/mdview.toml`
+- KaTeX for LaTeX math formulas (fonts embedded as data URIs, fully offline)
 - Prism.js syntax highlighting (Python, C++, Rust, etc.)
-- Single-file output, no server needed
+- Single-file HTML output, no server needed
+- `--checkhealth` to diagnose font availability
+- `--debug` to show font detection info in rendered output
 
 ## Install
 
@@ -20,16 +24,29 @@ cargo install --path .
 ## Usage
 
 ```bash
-mdview <file.md>
+mdview <file.md>              # render and open in browser
+mdview --checkhealth          # check if preferred fonts are installed
+mdview --debug <file.md>      # render with font debug info at page bottom
 ```
+
+## Configuration
+
+Font preferences can be set in `~/.config/mdview.toml`:
+
+```toml
+[fonts]
+sans = "Source Han Sans SC"            # prefer a different Chinese font
+mono = ["Iosevka", "JetBrains Mono"]   # list multiple preferences
+math = "Noto Sans Math"
+```
+
+If a font is not installed, the browser automatically falls back through the stack (system-ui → platform defaults → generic families).
 
 ## Dependencies
 
 - [marked.js](https://github.com/markedjs/marked) - Markdown parser
 - [KaTeX](https://github.com/KaTeX/KaTeX) - Math rendering
 - [Prism.js](https://github.com/PrismJS/prism) - Syntax highlighting
-- [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto+Sans+SC) - Chinese font
-- [Noto Sans Math](https://fonts.google.com/noto/specimen/Noto+Sans+Math) - Math font
 
 ## License
 
