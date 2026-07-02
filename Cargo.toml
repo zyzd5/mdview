@@ -6,6 +6,7 @@ description = "A minimal, high-performance CLI tool that renders Markdown files 
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
+clap_complete = "4"
 open = "5"
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }

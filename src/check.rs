@@ -46,13 +46,52 @@ pub fn check_fonts(families: &[String]) -> Vec<FontStatus> {
         .collect()
 }
 
+fn check_completion() -> Vec<(&'static str, bool)> {
+    let locations: &[(&str, &str)] = &[
+        ("bash", "/usr/local/share/bash-completion/completions/mdview"),
+        ("bash", "/etc/bash_completion.d/mdview"),
+        ("zsh", "/usr/local/share/zsh/site-functions/_mdview"),
+        ("fish", "/usr/local/share/fish/vendor_completions.d/mdview.fish"),
+        ("fish", "~/.config/fish/completions/mdview.fish"),
+    ];
+
+    let mut results: Vec<(&'static str, bool)> = Vec::new();
+    let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
+
+    for (shell, path) in locations {
+        let expanded = if path.starts_with('~') {
+            let home = dirs::home_dir().map(|p| p.to_string_lossy().to_string());
+            match home {
+                Some(h) => path.replacen('~', &h, 1),
+                None => continue,
+            }
+        } else {
+            (*path).to_string()
+        };
+
+        let exists = std::path::Path::new(&expanded).exists();
+        if exists && !seen.contains(shell) {
+            seen.insert(shell);
+            results.push((*shell, true));
+        }
+    }
+
+    for shell in &["bash", "zsh", "fish"] {
+        if !seen.contains(shell) {
+            results.push((*shell, false));
+        }
+    }
+
+    results.sort_by_key(|(s, _)| *s);
+    results
+}
+
 pub fn print_health_report(families: &[String]) {
     let statuses = check_fonts(families);
+
     println!("\nFont Check Report");
     println!("{}", "─".repeat(50));
-
     let all_ok = statuses.iter().all(|s| s.installed);
-
     for status in &statuses {
         let icon = if status.installed { "✓" } else { "✗" };
         println!(
@@ -65,6 +104,20 @@ pub fn print_health_report(families: &[String]) {
                 "Not installed"
             }
         );
+    }
+
+    println!("\nShell Completion Check");
+    println!("{}", "─".repeat(50));
+    let completion_all = check_completion();
+    for (shell, installed) in &completion_all {
+        let icon = if *installed { "✓" } else { "✗" };
+        let hint = if *installed { "" } else { "  (run: mdview completion <shell> > ...)" };
+        println!(" {}  {}{}", icon, shell, hint);
+    }
+    if completion_all.iter().any(|(_, ok)| *ok) {
+        println!("\nCompletion scripts are installed for some shells.");
+    } else {
+        println!("\nNo completion scripts found. Run 'mdview completion --help' to get started.");
     }
 
     println!();

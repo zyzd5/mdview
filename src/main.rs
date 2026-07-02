@@ -2,7 +2,9 @@ mod check;
 mod config;
 mod theme;
 
+use clap::CommandFactory;
 use clap::Parser;
+use clap_complete::Shell;
 use rand::Rng;
 use std::fs;
 use std::path::PathBuf;
@@ -34,7 +36,6 @@ fn open_in_wsl(path: &std::path::Path) -> bool {
 #[command(name = "mdview", about = "Render Markdown files with Claude-style typography")]
 struct Cli {
     /// Path to the Markdown file
-    #[arg(required_unless_present = "checkhealth")]
     file: Option<PathBuf>,
 
     /// Check system fonts availability without rendering
@@ -48,6 +49,18 @@ struct Cli {
     /// Color scheme (default: gruvbox-light)
     #[arg(long)]
     colorscheme: Option<String>,
+
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(clap::Subcommand)]
+enum Commands {
+    /// Generate shell completion scripts
+    Completion {
+        /// Shell to generate completions for (bash, zsh, fish, powershell, elvish)
+        shell: Shell,
+    },
 }
 
 fn generate_katex_font_faces() -> String {
@@ -692,6 +705,24 @@ fn generate_html_template(
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
+
+    if let Some(command) = cli.command {
+        match command {
+            Commands::Completion { shell } => {
+                let mut cmd = Cli::command();
+                clap_complete::generate(shell, &mut cmd, "mdview", &mut std::io::stdout());
+                return Ok(());
+            }
+        }
+    }
+
+    if cli.file.is_none() && !cli.checkhealth {
+        eprintln!(
+            "error: the following required arguments were not provided:\n  <FILE>\n\nUsage: mdview [OPTIONS] [FILE]\n\nFor more information, try '--help'."
+        );
+        std::process::exit(1);
+    }
+
     let config = config::Config::load();
 
     if cli.checkhealth {
