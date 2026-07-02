@@ -29,9 +29,26 @@ mdview --checkhealth                        # check if preferred fonts are insta
 mdview --debug <file.md>                    # render with font debug info at page bottom
 mdview --colorscheme nord <file.md>         # use a specific color scheme
 mdview --colorscheme bogus <file.md>        # error: lists available schemes
+mdview completion <SHELL>                   # generate shell completion script
 ```
 
-## Configuration
+## Shell Completion
+
+Generate and install completion scripts for your shell:
+
+```bash
+# Bash
+mdview completion bash > /usr/local/share/bash-completion/completions/mdview
+# Zsh
+mdview completion zsh > /usr/local/share/zsh/site-functions/_mdview
+# Fish
+mdview completion fish > ~/.config/fish/completions/mdview.fish
+```
+
+After reloading your shell (or running `source`), you can use:
+- `mdview --<Tab>` to cycle through `--checkhealth`, `--debug`, `--colorscheme`
+- `mdview completion <Tab>` to pick between bash, zsh, fish, etc.
+- Run `mdview --checkhealth` to see whether completion scripts are installed.
 
 ## Configuration
 
