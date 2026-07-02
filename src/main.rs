@@ -646,8 +646,19 @@ fn generate_html_template(
                 function check(family) {
                     try {
                         var q = family.indexOf(' ') >= 0 ? '"' + family + '"' : family;
-                        return document.fonts.check('12px ' + q) ? '\u2713' : '\u2717';
-                    } catch(e) { return '?'; }
+                        if (document.fonts.check('12px ' + q)) return '\u2713';
+                    } catch(e) {}
+                    if (family.indexOf('KaTeX_') === 0) {
+                        var c = document.createElement('canvas');
+                        c.width = 100; c.height = 50;
+                        var x = c.getContext('2d');
+                        x.font = '20px serif';
+                        var w1 = x.measureText('mmmmm').width;
+                        x.font = '20px ' + family + ', serif';
+                        var w2 = x.measureText('mmmmm').width;
+                        return Math.abs(w1 - w2) > 0.5 ? '\u2713' : '\u2717';
+                    }
+                    return '\u2717';
                 }
                 var roles = [
                     {label: 'Body (Sans)', sel: 'body'},
