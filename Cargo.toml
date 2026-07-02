@@ -2,7 +2,7 @@
 name = "mdview"
 version = "0.2.0"
 edition = "2021"
-description = "A minimal, high-performance CLI tool that renders Markdown files with Claude-style typography"
+description = "A minimal, high-performance CLI tool that renders Markdown files with browser"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }

@@ -33,7 +33,7 @@ fn open_in_wsl(path: &std::path::Path) -> bool {
 }
 
 #[derive(Parser)]
-#[command(name = "mdview", about = "Render Markdown files with Claude-style typography")]
+#[command(name = "mdview", about = "Render Markdown files with browser")]
 struct Cli {
     /// Path to the Markdown file
     file: Option<PathBuf>,

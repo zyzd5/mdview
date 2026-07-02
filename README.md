@@ -1,6 +1,6 @@
 # mdview
 
-A minimal, high-performance CLI tool that renders Markdown files in your browser with Claude-style typography.
+A minimal, high-performance CLI tool that renders Markdown files in your browser with browser.
 
 ## Features
 
